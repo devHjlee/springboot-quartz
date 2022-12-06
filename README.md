@@ -5,17 +5,17 @@ Cluster기능은 DB Cluster 사용
 ## 목차
   공식 홈페이지 : http://www.quartz-scheduler.org/
 
-  [0.Quartz란?](#0.Quartz란?)
+  [0.Quartz란?](#Quartz란?)
 
-  [1.개발환경](#1.개발환경)
+  [1.개발환경](#개발환경)
 
-  [2.용어정리](#2.용어정리)
+  [2.용어정리](#용어정리)
 
-  [3.Config](#3.설정)
+  [3.Config](#설정)
 
   [4.]
 
-## 0.Quartz란?
+## Quartz란?
 Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프로그램에서 사용 가능하고
 간단한 interval형식이나 Cron 표현식 스케줄링 지원
 * 장점
@@ -34,7 +34,7 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
   ![img_1.png](img_1.png)
   출처 : https://www.javarticles.com/2016/03/quartz-scheduler-model.html#prettyPhoto
 
-## 1.개발환경
+## 개발환경
 * Jdk : OpenJdk 1.8
 * DB : Mysql 8.0
 * spring boot : 2.7.6
@@ -42,7 +42,7 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
   - spring-boot-starter-quartz
   - mysql-connector-j
 
-## 2.용어정리
+## 용어정리
 * Job
   * Job 인터페이스의 excute 메소드를 trigger 에 의해 실행
   * 개발자는 수행해야 하는 실제 작업을 이 메서드에서 구현
@@ -65,7 +65,7 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
 * Listener
   * JobListener : Job 실행 전후로 이벤트를 받을 수 있음
   * TriggerListener : Trigger 실행 전후로 이벤트를 받을 수 있음
-## 3.설정
+## 설정
 ```java
 @Configuration
 public class QuartzConfig {
