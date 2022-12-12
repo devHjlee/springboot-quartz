@@ -1,7 +1,13 @@
 # 개요
-스프링스케줄러+shedLock 을 사용하여 스케줄링 이중화를 구현하였으나
-스케줄에 대한 동작시간 수정,일시정지,수행기능을 추가하기 위해 Quartz로 변경
-Cluster기능은 DB Cluster 사용
+* 스프링스케줄러+shedLock 을 사용하여 스케줄링 이중화를 구현하였으나 
+스케줄에 대한 컨트롤이 불가능하였고 어드민 UI 에서 스케줄에 대한 기능추가를 위해 Quartz로 변경
+* 구현 목록
+  * 이중화 : Cluster 기능은 DB Cluster 사용
+  * Job : 생성,즉시수행
+  * CronTrigger : 생성,수정,일시정지,재기동
+  * 스케줄 등록 수정 이력
+  * 스케줄 성공 여부 이력
+
 ## 목차
   공식 홈페이지 : http://www.quartz-scheduler.org/
 
@@ -13,7 +19,7 @@ Cluster기능은 DB Cluster 사용
 
   [3.Config](#설정)
 
-  [4.]
+  [4.프로젝트 구조](#프로젝트구조)
 
 ## Quartz란?
 Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프로그램에서 사용 가능하고
@@ -121,6 +127,8 @@ spring.quartz.properties.org.quartz.jobStore.misfireThreshold=60000
     * https://github.com/ChamithKodikara/quartz-demo/issues/1
     * https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/quartz/LocalDataSourceJobStore.html
 
-![img.png](img.png)
-* DB Cluster 확인
 
+* DB Cluster 확인
+![img.png](img.png)
+
+## 프로젝트구조
