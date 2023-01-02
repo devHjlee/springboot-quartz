@@ -1,20 +1,20 @@
 package com.springbootquartz.dto;
 
-import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.quartz.JobDataMap;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 public class JobRequest {
     private String jobGroup = "DEV";
-    @NotNull
+    @NotBlank(message = "JobName 필수 값입니다.")
     private String jobName;
-    @NotNull
+    @NotBlank(message = "JobClass 필수 값입니다.")
     private String jobClass;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
