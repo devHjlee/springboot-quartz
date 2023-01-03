@@ -6,13 +6,21 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
-
 @RestControllerAdvice
 public class ExceptionController {
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ClassNotFoundException.class)
+    public ResponseEntity<?> handleClassNotFoundException(ClassNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected Object handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
-        return e.getBindingResult().getAllErrors();
+    protected ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getBindingResult().getAllErrors());
     }
 }

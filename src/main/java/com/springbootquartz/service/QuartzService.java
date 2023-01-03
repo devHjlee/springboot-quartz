@@ -1,13 +1,12 @@
 package com.springbootquartz.service;
 
 import com.springbootquartz.dto.JobRequest;
-import org.quartz.Job;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
 public interface QuartzService {
 
-    boolean addJob(JobRequest jobReques, Class<? extends Job> jobClass);
+    void addJob(JobRequest jobReques) throws Exception;
 
     boolean updateJob(JobRequest jobRequest);
 
@@ -19,6 +18,5 @@ public interface QuartzService {
 
     boolean immediatelyJob(JobKey jobKey);
 
-    boolean isJobExists(JobKey jobKey) throws SchedulerException;
-
+    boolean isJobExists(JobRequest jobRequest) throws SchedulerException;
 }

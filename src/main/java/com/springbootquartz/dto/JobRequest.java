@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 @Setter
 public class JobRequest {
     private String jobGroup = "DEV";
-    @NotBlank(message = "JobName 필수 값입니다.")
+    @NotBlank(message = "JobName is required.")
     private String jobName;
-    @NotBlank(message = "JobClass 필수 값입니다.")
+    @NotBlank(message = "JobClass is required.")
     private String jobClass;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
