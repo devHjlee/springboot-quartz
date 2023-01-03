@@ -17,12 +17,14 @@ public class JobRequest {
     @NotBlank(message = "JobClass is required.")
     private String jobClass;
 
+    @NotBlank(message = "cronExpression is required.")
+    private String cronExpression;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startDateAt;
     private long repeatIntervalInSeconds;
     private int repeatCount;
 
-    private String cronExpression;
     private JobDataMap jobDataMap;
 
     private String desc;
