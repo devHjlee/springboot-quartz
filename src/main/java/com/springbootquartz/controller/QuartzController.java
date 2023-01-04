@@ -25,16 +25,16 @@ public class QuartzController {
     private final QuartzService quartzService;
 
     @RequestMapping(value = "/job/add", method = RequestMethod.POST)
-    public ResponseEntity<ApiResponse> addJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
-        quartzService.addJob(jobRequest);
+    public ResponseEntity<ApiResponse> addScheduleJob(@Valid @RequestBody JobRequest jobRequest){
+        quartzService.addScheduleJob(jobRequest);
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.CREATED);
     }
 
     @RequestMapping(value = "/job/update", method = RequestMethod.PUT)
-    public ResponseEntity<ApiResponse> updateJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
+    public ResponseEntity<ApiResponse> updateScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
 
         if(quartzService.isJobExists(jobRequest)){
-            quartzService.updateJob(jobRequest);
+            quartzService.updateScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
         }
@@ -42,13 +42,16 @@ public class QuartzController {
     }
 
     @RequestMapping(value = "/job/delete", method = RequestMethod.DELETE)
-    public ResponseEntity<ApiResponse> deleteJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
+    public ResponseEntity<ApiResponse> deleteScheduleJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
+        quartzService.deleteScheduleJob(jobRequest);
 
-        if(quartzService.isJobExists(jobRequest)){
-            quartzService.updateJob(jobRequest);
-        }else{
-            return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/job/state", method = RequestMethod.POST)
+    public ResponseEntity<ApiResponse> stateJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
+        quartzService.immediatelyJob(jobRequest);
+
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
     }
 }

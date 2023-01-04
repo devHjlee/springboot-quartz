@@ -10,10 +10,16 @@ public class TestCronJob1 extends QuartzJobBean {
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
-        log.info("============================================================================");
-        log.info("TestCronJob1");
-        log.info("TestCronJob1");
-        log.info("============================================================================");
+        try {
+            log.info("============================================================================");
+            log.info("TestCronJob1");
+            Thread.sleep(15000);
+            log.info("TestCronJob1");
+            log.info("============================================================================");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
 
     }
 }

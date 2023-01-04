@@ -50,8 +50,8 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
 
 ## 용어정리
 * Job
-  * Job 인터페이스의 excute 메소드를 trigger 에 의해 실행
   * 개발자는 수행해야 하는 실제 작업을 이 메서드에서 구현
+  * Job 인터페이스의 excute 메소드를 trigger 에 의해 실행
   * Job excute vs QuartzJobBean executeInternal
     * https://stackoverflow.com/questions/66066744/spring-boot-starter-quartz-implements-job-vs-extends-quartzjobbean
 * JobDetail

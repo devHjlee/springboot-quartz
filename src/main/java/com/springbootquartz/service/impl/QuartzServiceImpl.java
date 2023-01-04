@@ -14,6 +14,7 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -27,7 +28,7 @@ public class QuartzServiceImpl implements QuartzService {
     private final ApplicationContext context;
 
     @Override
-    public void addJob(JobRequest jobRequest) throws Exception {
+    public void addScheduleJob(JobRequest jobRequest) {
         JobDetail jobDetail;
         Trigger trigger;
         Class<Job> jobClass = null;
@@ -38,14 +39,17 @@ public class QuartzServiceImpl implements QuartzService {
             trigger = QuartzUtils.createTrigger(jobRequest);
 
             schedulerFactoryBean.getScheduler().scheduleJob(jobDetail,trigger);
-        } catch (SchedulerException | ClassNotFoundException e) {
-            log.error("[add Job] :"+e.toString());
-            throw new Exception(e);
+        } catch (SchedulerException e) {
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+        } catch (ClassNotFoundException e){
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+            // TODO: 2023-01-04 Business Exception 추가해서 처리 필요
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public boolean updateJob(JobRequest jobRequest) {
+    public boolean updateScheduleJob(JobRequest jobRequest) {
         JobKey jobKey = null;
         Trigger newTrigger;
 
@@ -63,35 +67,51 @@ public class QuartzServiceImpl implements QuartzService {
     }
 
     @Override
-    public boolean deleteJob(JobKey jobKey) {
+    public boolean deleteScheduleJob(JobRequest jobRequest) {
+        JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
+        try {
+            throw new SchedulerException();
+        } catch (SchedulerException e) {
+            log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobKey, e);
+        }
         return false;
     }
 
     @Override
-    public boolean pauseJob(JobKey jobKey) {
+    public boolean pauseScheduleJob(JobKey jobKey) {
         return false;
     }
 
     @Override
-    public boolean resumeJob(JobKey jobKey) {
+    public boolean resumeScheduleJob(JobKey jobKey) {
         return false;
     }
 
     @Override
-    public boolean immediatelyJob(JobKey jobKey) {
-//        try {
-//            if(isJobExists(jobKey)){
-//                schedulerFactoryBean.getScheduler().triggerJob(jobKey);
-//                return true;
-//            }
-//        } catch (SchedulerException e) {
-//            log.error("[schedulerdebug] error occurred while checking job exists :: jobKey : {}", jobKey, e);
-//        }
+    public boolean immediatelyJob(JobRequest jobRequest){
         return false;
     }
 
     @Override
-    public boolean isJobExists(JobRequest jobRequest) throws SchedulerException {
+    public boolean isJobRunning(JobRequest jobRequest) {
+        try {
+            List<JobExecutionContext> currentJobs = schedulerFactoryBean.getScheduler().getCurrentlyExecutingJobs();
+            if (currentJobs != null) {
+                for (JobExecutionContext jobCtx : currentJobs) {
+                    if (jobRequest.getJobName().equals(jobCtx.getJobDetail().getKey().getName())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (SchedulerException e) {
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isJobExists(JobRequest jobRequest) {
         JobKey jobKey = null;
         try {
             jobKey = new JobKey(jobRequest.getJobName(),jobRequest.getJobGroup());
@@ -99,11 +119,34 @@ public class QuartzServiceImpl implements QuartzService {
             if (scheduler.checkExists(jobKey)) {
                 return true;
             }
+
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error occurred while checking job exists :: jobKey : {}", jobKey, e);
-            throw new SchedulerException(e);
+
         }
         return false;
     }
 
+//    @Override
+//    public String getJobState(JobKey jobKey) {
+//        try {
+//            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+//            JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+//
+//            List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobDetail.getKey());
+//
+//            if (triggers != null && triggers.size() > 0) {
+//                for (Trigger trigger : triggers) {
+//                    Trigger.TriggerState triggerState = scheduler.getTriggerState(trigger.getKey());
+//                    if (Trigger.TriggerState.NORMAL.equals(triggerState)) {
+//                        return "SCHEDULED";
+//                    }
+//                    return triggerState.name().toUpperCase();
+//                }
+//            }
+//        } catch (SchedulerException e) {
+//            log.error("[schedulerdebug] Error occurred while getting job state with jobKey : {}", jobKey, e);
+//        }
+//        return null;
+//    }
 }

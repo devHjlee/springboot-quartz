@@ -6,17 +6,19 @@ import org.quartz.SchedulerException;
 
 public interface QuartzService {
 
-    void addJob(JobRequest jobReques) throws Exception;
+    void addScheduleJob(JobRequest jobReques);
 
-    boolean updateJob(JobRequest jobRequest);
+    boolean updateScheduleJob(JobRequest jobRequest);
 
-    boolean deleteJob(JobKey jobKey);
+    boolean deleteScheduleJob(JobRequest jobRequest);
 
-    boolean pauseJob(JobKey jobKey);
+    boolean pauseScheduleJob(JobKey jobKey);
 
-    boolean resumeJob(JobKey jobKey);
+    boolean resumeScheduleJob(JobKey jobKey);
 
-    boolean immediatelyJob(JobKey jobKey);
+    boolean immediatelyJob(JobRequest jobRequest);
 
-    boolean isJobExists(JobRequest jobRequest) throws SchedulerException;
+    boolean isJobRunning(JobRequest jobRequest);
+
+    boolean isJobExists(JobRequest jobRequest);
 }
