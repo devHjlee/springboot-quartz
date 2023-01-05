@@ -17,9 +17,9 @@
 
   [2.용어정리](#용어정리)
 
-  [3.Config](#설정)
+  [3.프로젝트 구조](#프로젝트구조)
 
-  [4.프로젝트 구조](#프로젝트구조)
+  [4.소스 설명](#프로젝트내_주요_소스설명)
 
 ## Quartz란?
 Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프로그램에서 사용 가능하고
@@ -71,7 +71,12 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
 * Listener
   * JobListener : Job 실행 전후로 이벤트를 받을 수 있음
   * TriggerListener : Trigger 실행 전후로 이벤트를 받을 수 있음
-## 설정
+
+## 프로젝트구조
+![img_3.png](img_3.png)
+
+## 프로젝트내_주요_소스설명
+#### QuartzConfig
 ```java
 @Configuration
 public class QuartzConfig {
@@ -102,9 +107,10 @@ public class QuartzConfig {
     }
 }
 ```
-* AutowiringSpringBeanJobFactory
+#### AutowiringSpringBeanJobFactory
   * Quartz Job 에서 Spring bean 을 참조하기 위해 설정추가
 
+#### quartz.properteis
 ```properties
 #Quartz
 spring.quartz.scheduler-name=QuartzScheduler
@@ -120,19 +126,53 @@ spring.quartz.properties.org.quartz.jobStore.driverDelegateClass=org.quartz.impl
 spring.quartz.properties.org.quartz.jobStore.useProperties=true
 spring.quartz.properties.org.quartz.jobStore.misfireThreshold=60000
 ```
-* jboStore.class
+* jobStore.class
   * JobStoreTX : 트랜잭션을 제어하고 싶은 경우나, 서버 환경 없이 어플리케이션을 운영하려 할 때 사용된다.
   * JobStoreCMT : 어플리케이션 서버 환경 내에서 어플리케이션이 운영되며 컨테이너가 트랜잭션을 관리하도록 하고 싶은 경우 사용된다.
   * LocalDataSourceJobStore : JobStoreTX 사용시 dataSource null 오류 , 스프링에서 대체됨
     * https://github.com/ChamithKodikara/quartz-demo/issues/1
     * https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/quartz/LocalDataSourceJobStore.html
 
-
 * DB Cluster 확인
-![img.png](img.png)
+  ![img.png](img.png)
 
-## 프로젝트구조
-![img_3.png](img_3.png)
 
-## a
+#### JobListener
+```java
+@Component
+public class JobsListener implements JobListener {
+    //...생략
+    @Override //Job 수행 전 수행되는 메소드
+    public void jobToBeExecuted(JobExecutionContext context) {}
+    @Override // Job 중단된 상태
+    public void jobExecutionVetoed(JobExecutionContext context) {}
+    @Override // Job 수행 완료 후 수행되는 메소드
+    public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {}
+}
+```
 
+#### TriggerListener
+```java
+@Component
+public class TriggersListener implements TriggerListener {
+    //...생략
+    @Override //Trigger 실행시, 리스너중 가장 먼저 실행됨
+    public void triggerFired(Trigger trigger, JobExecutionContext context) {}
+    @Override //Trigger 중단 여부를 확인하는 메소드
+    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
+    @Override
+    public void triggerMisfired(Trigger trigger) {}
+    @Override //Trigger 실행 완료 후 수행되는 메소드
+    public void triggerComplete(Trigger trigger, JobExecutionContext context,Trigger.CompletedExecutionInstruction triggerInstructionCode){}
+}
+```
+
+#### QuartzUtils
+```java
+
+```
+
+#### QuartzService
+```java
+
+```

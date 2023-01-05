@@ -17,7 +17,7 @@ public class JobRequest {
     @NotBlank(message = "JobClass is required.")
     private String jobClass;
 
-    @NotBlank(message = "cronExpression is required.")
+    //@NotBlank(message = "cronExpression is required.")
     private String cronExpression;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

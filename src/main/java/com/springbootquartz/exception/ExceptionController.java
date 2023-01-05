@@ -15,8 +15,13 @@ public class ExceptionController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString());
     }
     @ExceptionHandler(SchedulerException.class)
-    public ResponseEntity<?> handleException2(SchedulerException e) {
+    public ResponseEntity<?> handleSchedulerException(SchedulerException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentExceptionException(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.toString());
     }
 
     @ExceptionHandler(ClassNotFoundException.class)

@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class QuartzServiceImpl implements QuartzService {
-
+    // TODO: 2023-01-04 Business Exception 추가해서 처리 필요
     private final SchedulerFactoryBean schedulerFactoryBean;
 
     private final QuartzHistoryService quartzHistoryService;
@@ -43,8 +43,10 @@ public class QuartzServiceImpl implements QuartzService {
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
         } catch (ClassNotFoundException e){
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
-            // TODO: 2023-01-04 Business Exception 추가해서 처리 필요
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage());
+        } catch (IllegalArgumentException e){
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 
@@ -61,7 +63,10 @@ public class QuartzServiceImpl implements QuartzService {
             log.debug("Job with jobKey : {} rescheduled successfully at date : {}", jobKey, dt);
             return true;
         } catch (SchedulerException e) {
-            log.error("error occurred while scheduling with jobKey : {}", jobKey, e);
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+        } catch (IllegalArgumentException e){
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+            throw new IllegalArgumentException(e);
         }
         return false;
     }
@@ -70,9 +75,14 @@ public class QuartzServiceImpl implements QuartzService {
     public boolean deleteScheduleJob(JobRequest jobRequest) {
         JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
         try {
-            throw new SchedulerException();
+            if(schedulerFactoryBean.getScheduler().interrupt(jobKey)) {
+                schedulerFactoryBean.getScheduler().deleteJob(jobKey);
+            }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobKey, e);
+            log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobRequest.getJobName(), e);
+        } catch (IllegalArgumentException e){
+            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+            throw new IllegalArgumentException(e);
         }
         return false;
     }

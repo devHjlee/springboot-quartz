@@ -32,7 +32,7 @@ public class QuartzController {
 
     @RequestMapping(value = "/job/update", method = RequestMethod.PUT)
     public ResponseEntity<ApiResponse> updateScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
-
+        //quartzService.updateScheduleJob(jobRequest);
         if(quartzService.isJobExists(jobRequest)){
             quartzService.updateScheduleJob(jobRequest);
         }else{
@@ -42,15 +42,18 @@ public class QuartzController {
     }
 
     @RequestMapping(value = "/job/delete", method = RequestMethod.DELETE)
-    public ResponseEntity<ApiResponse> deleteScheduleJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
-        quartzService.deleteScheduleJob(jobRequest);
-
+    public ResponseEntity<ApiResponse> deleteScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
+        if(quartzService.isJobExists(jobRequest)) {
+            quartzService.deleteScheduleJob(jobRequest);
+        }else{
+            return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/job/state", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> stateJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
-        quartzService.immediatelyJob(jobRequest);
+        quartzService.isJobRunning(jobRequest);
 
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
     }

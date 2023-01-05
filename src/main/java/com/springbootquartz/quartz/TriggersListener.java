@@ -32,6 +32,7 @@ public class TriggersListener implements TriggerListener {
     */
     @Override
     public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
+        log.info("vetoJobExecution at {} :: jobKey : {}", trigger.getStartTime(), trigger);
         return false;
     }
 
