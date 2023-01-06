@@ -6,6 +6,9 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+/**
+ * 스케줄러 중복 실행 방지
+ */
 @Slf4j
 @DisallowConcurrentExecution
 public class TestCronJob2 extends QuartzJobBean {

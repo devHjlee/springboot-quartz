@@ -75,25 +75,32 @@ public class QuartzServiceImpl implements QuartzService {
     public boolean deleteScheduleJob(JobRequest jobRequest) {
         JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
         try {
-            if(schedulerFactoryBean.getScheduler().interrupt(jobKey)) {
-                schedulerFactoryBean.getScheduler().deleteJob(jobKey);
-            }
+            schedulerFactoryBean.getScheduler().deleteJob(jobKey);
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobRequest.getJobName(), e);
-        } catch (IllegalArgumentException e){
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
-            throw new IllegalArgumentException(e);
         }
         return false;
     }
 
     @Override
-    public boolean pauseScheduleJob(JobKey jobKey) {
+    public boolean pauseScheduleJob(JobRequest jobRequest) {
+        JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
+        try {
+            schedulerFactoryBean.getScheduler().pauseJob(jobKey);
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
     @Override
-    public boolean resumeScheduleJob(JobKey jobKey) {
+    public boolean resumeScheduleJob(JobRequest jobRequest) {
+        JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
+        try {
+            schedulerFactoryBean.getScheduler().resumeJob(jobKey);
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -122,9 +129,8 @@ public class QuartzServiceImpl implements QuartzService {
 
     @Override
     public boolean isJobExists(JobRequest jobRequest) {
-        JobKey jobKey = null;
+        JobKey jobKey = jobKey = new JobKey(jobRequest.getJobName(),jobRequest.getJobGroup());
         try {
-            jobKey = new JobKey(jobRequest.getJobName(),jobRequest.getJobGroup());
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
             if (scheduler.checkExists(jobKey)) {
                 return true;
@@ -132,31 +138,31 @@ public class QuartzServiceImpl implements QuartzService {
 
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error occurred while checking job exists :: jobKey : {}", jobKey, e);
-
         }
         return false;
     }
 
-//    @Override
-//    public String getJobState(JobKey jobKey) {
-//        try {
-//            Scheduler scheduler = schedulerFactoryBean.getScheduler();
-//            JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-//
-//            List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobDetail.getKey());
-//
-//            if (triggers != null && triggers.size() > 0) {
-//                for (Trigger trigger : triggers) {
-//                    Trigger.TriggerState triggerState = scheduler.getTriggerState(trigger.getKey());
-//                    if (Trigger.TriggerState.NORMAL.equals(triggerState)) {
-//                        return "SCHEDULED";
-//                    }
-//                    return triggerState.name().toUpperCase();
-//                }
-//            }
-//        } catch (SchedulerException e) {
-//            log.error("[schedulerdebug] Error occurred while getting job state with jobKey : {}", jobKey, e);
-//        }
-//        return null;
-//    }
+    @Override
+    public String getScheduleState(JobRequest jobRequest) {
+        JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
+        try {
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+            JobDetail jobDetail = scheduler.getJobDetail(jobKey);
+
+            List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobDetail.getKey());
+
+            if (triggers != null && triggers.size() > 0) {
+                for (Trigger trigger : triggers) {
+                    Trigger.TriggerState triggerState = scheduler.getTriggerState(trigger.getKey());
+                    if (Trigger.TriggerState.NORMAL.equals(triggerState)) {
+                        return "SCHEDULED";
+                    }
+                    return triggerState.name().toUpperCase();
+                }
+            }
+        } catch (SchedulerException e) {
+            log.error("[schedulerdebug] Error occurred while getting job state with jobKey : {}", jobKey, e);
+        }
+        return null;
+    }
 }

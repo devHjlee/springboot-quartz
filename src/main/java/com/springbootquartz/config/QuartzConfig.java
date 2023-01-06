@@ -49,8 +49,8 @@ public class QuartzConfig {
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setDataSource(dataSource);
         schedulerFactoryBean.setQuartzProperties(properties);
+        //schedulerFactoryBean.setSchedulerName("AA");
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
-
 
         return schedulerFactoryBean;
     }

@@ -12,13 +12,15 @@ public interface QuartzService {
 
     boolean deleteScheduleJob(JobRequest jobRequest);
 
-    boolean pauseScheduleJob(JobKey jobKey);
+    boolean pauseScheduleJob(JobRequest jobRequest);
 
-    boolean resumeScheduleJob(JobKey jobKey);
+    boolean resumeScheduleJob(JobRequest jobRequest);
 
     boolean immediatelyJob(JobRequest jobRequest);
 
     boolean isJobRunning(JobRequest jobRequest);
 
     boolean isJobExists(JobRequest jobRequest);
+
+    String getScheduleState(JobRequest jobRequest);
 }

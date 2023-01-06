@@ -51,11 +51,30 @@ public class QuartzController {
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/job/pause", method = RequestMethod.POST)
+    public ResponseEntity<ApiResponse> pauseScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
+        if(quartzService.isJobExists(jobRequest)) {
+            quartzService.pauseScheduleJob(jobRequest);
+        }else{
+            return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/job/resume", method = RequestMethod.POST)
+    public ResponseEntity<ApiResponse> resumeScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
+        if(quartzService.isJobExists(jobRequest)) {
+            quartzService.resumeScheduleJob(jobRequest);
+        }else{
+            return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/job/state", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> stateJob(@Valid @RequestBody JobRequest jobRequest) throws Exception {
-        quartzService.isJobRunning(jobRequest);
-
-        return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.OK);
+        String state = quartzService.getScheduleState(jobRequest);
+        return new ResponseEntity<>(new ApiResponse(true,state), HttpStatus.OK);
     }
 }
 

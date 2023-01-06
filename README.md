@@ -108,7 +108,26 @@ public class QuartzConfig {
 }
 ```
 #### AutowiringSpringBeanJobFactory
-  * Quartz Job 에서 Spring bean 을 참조하기 위해 설정추가
+
+```java
+public class AutowiringSpringBeanJobFactory extends SpringBeanJobFactory implements ApplicationContextAware {
+    private transient AutowireCapableBeanFactory beanFactory;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        beanFactory = applicationContext.getAutowireCapableBeanFactory();
+    }
+
+    @Override
+    protected Object createJobInstance(TriggerFiredBundle bundle) throws Exception {
+        final Object job = super.createJobInstance(bundle);
+        beanFactory.autowireBean(job);
+        return job;
+    }
+
+}
+```
+* Quartz Job 에서 Spring bean 을 참조하기 위해 설정추가
 
 #### quartz.properteis
 ```properties
@@ -169,10 +188,89 @@ public class TriggersListener implements TriggerListener {
 
 #### QuartzUtils
 ```java
+public class QuartzUtils {
 
+    private QuartzUtils() {
+    }
+
+    /**
+     * Job 생성
+     * @param jobRequest - Quartz Job 정보
+     * @param jobClass - Job 생성할 Class
+     * @param context - ApplicationContext
+     * @return JobDetail
+     */
+    public static JobDetail createJob(JobRequest jobRequest, Class<? extends Job> jobClass, ApplicationContext context) {
+        JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
+        factoryBean.setJobClass(jobClass);
+        factoryBean.setDurability(false);
+        factoryBean.setApplicationContext(context);
+        factoryBean.setName(jobRequest.getJobName());
+        factoryBean.setGroup(jobRequest.getJobGroup());
+        factoryBean.setDescription(jobRequest.getDesc());
+        if (jobRequest.getJobDataMap() != null) {
+            factoryBean.setJobDataMap(jobRequest.getJobDataMap());
+        }
+
+        factoryBean.afterPropertiesSet();
+        return factoryBean.getObject();
+    }
+
+    /**
+     * Trigger 생성(Cron,Simple)
+     * @param jobRequest - Quartz Job 정보
+     * @return Trigger
+     */
+    public static Trigger createTrigger(JobRequest jobRequest) {
+        String cronExpression = jobRequest.getCronExpression();
+        if (!isValidExpression(cronExpression)) {
+            throw new IllegalArgumentException("Provided expression " + cronExpression + " is not a valid cron expression");
+        } else {
+            return createCronTrigger(jobRequest);
+        }
+    }
+
+    /**
+     * CronTrigger 생성
+     * @param jobRequest - Quartz Job 정보
+     * @return Trigger
+     */
+    private static Trigger createCronTrigger(JobRequest jobRequest) {
+        CronTriggerFactoryBean factoryBean = new CronTriggerFactoryBean();
+        factoryBean.setName(jobRequest.getJobName().concat("Trigger"));
+        factoryBean.setGroup(jobRequest.getJobGroup());
+        factoryBean.setCronExpression(jobRequest.getCronExpression());
+        factoryBean.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+        try {
+            factoryBean.afterPropertiesSet();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return factoryBean.getObject();
+    }
+
+    /**
+     * SimpleTrigger 생성
+     * @param jobRequest - Quartz Job 정보
+     * @return Trigger
+     */
+    private static Trigger createSimpleTrigger(JobRequest jobRequest) {
+        SimpleTriggerFactoryBean factoryBean = new SimpleTriggerFactoryBean();
+        factoryBean.setName(jobRequest.getJobName());
+        factoryBean.setGroup(jobRequest.getJobGroup());
+        factoryBean.setStartTime(Date.from(jobRequest.getStartDateAt().atZone(ZoneId.systemDefault()).toInstant()));
+        factoryBean.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+        factoryBean.setRepeatInterval(jobRequest.getRepeatIntervalInSeconds() * 1000); //ms 단위임
+        factoryBean.setRepeatCount(jobRequest.getRepeatCount());
+
+        factoryBean.afterPropertiesSet();
+        return factoryBean.getObject();
+    }
+}
 ```
 
 #### QuartzService
 ```java
 
 ```
+* 
