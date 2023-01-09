@@ -10,7 +10,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
  * 스케줄러 중복 실행 방지
  */
 @Slf4j
-@DisallowConcurrentExecution
+//@DisallowConcurrentExecution //클러스터링 환경에선 해당 어노테이션 작동하지 않음 테스트 해봐야함
 public class TestCronJob2 extends QuartzJobBean {
 
     @Override

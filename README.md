@@ -309,7 +309,13 @@ public class QuartzUtils {
 ```
 
 #### TestCronJob1~4
-* 1 : 단순 Job Test용
-* 2 : @DisallowConcurrentExecution 을 통해 동기화 보장 테스트용
-* 3 : interrupt 구현
-* 4 : Exception 발생 시 Jobslitener jobWasExecuted 메소드에서 재시도를 위한 Test용
+* TestCronJob11 : 단순 Job Test용
+* TestCronJob12 : @DisallowConcurrentExecution 을 통해 동기화 보장 테스트용 스케줄은 10초단위로 돌면서 쓰레드슬립을 15초로 설정
+  * @DisallowConcurrentExecution 옵션 사용
+    ![img_4.png](img_4.png)
+    ![img_5.png](img_5.png)
+  * @DisallowConcurrentExecution 옵션 주석처리
+    ![img_6.png](img_6.png)
+    ![img_7.png](img_7.png)
+* TestCronJob13 : interrupt 구현
+* TestCronJob14 : Exception 발생 시 Jobslitener jobWasExecuted 메소드에서 재시도를 위한 Test용
