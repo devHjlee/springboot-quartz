@@ -165,22 +165,6 @@ public class JobsListener implements JobListener {
     public void jobToBeExecuted(JobExecutionContext context) {}
     @Override // Job 중단된 상태
     public void jobExecutionVetoed(JobExecutionContext context) {}
-    @Override // Job 수행 완료 후 수행되는 메소드
-    public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {}
-}
-```
-
-#### TriggerListener
-```java
-@Component
-public class TriggersListener implements TriggerListener {
-    //...생략
-    @Override //Trigger 실행시, 리스너중 가장 먼저 실행됨
-    public void triggerFired(Trigger trigger, JobExecutionContext context) {}
-    @Override //Trigger 중단 여부를 확인하는 메소드
-    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
-    @Override
-    public void triggerMisfired(Trigger trigger) {}
   /**
    * Job 수행 완료 후
    * Job Exception 발생 시 3번의 재시도 / 그래도 실패 시 해당 Trigger 중지
@@ -214,6 +198,26 @@ public class TriggersListener implements TriggerListener {
 }
 ```
 * jobWasExecuted : Job에서 Exception 발생으로 재시도 횟수만큼 진행 후 정상처리가 안될시 해당 Trigger를 중지시킴
+
+#### TriggerListener
+```java
+@Component
+public class TriggersListener implements TriggerListener {
+    //...생략
+    @Override //Trigger 실행시, 리스너중 가장 먼저 실행됨
+    public void triggerFired(Trigger trigger, JobExecutionContext context) {}
+    @Override //Trigger 중단 여부를 확인하는 메소드
+    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
+    @Override
+    public void triggerMisfired(Trigger trigger) {}
+    @Override //Trigger 수행 완료 후 실행
+    public void triggerComplete(Trigger trigger, JobExecutionContext context,
+								Trigger.CompletedExecutionInstruction triggerInstructionCode) {}
+
+  }
+}
+```
+
 
 
 #### QuartzUtils
