@@ -106,6 +106,14 @@ public class QuartzServiceImpl implements QuartzService {
 
     @Override
     public boolean immediatelyJob(JobRequest jobRequest){
+        JobKey jobKey = JobKey.jobKey(jobRequest.getJobName(), jobRequest.getJobGroup());
+        JobDataMap jobDataMap = new JobDataMap(jobRequest.getJobDataMap());
+
+        try {
+            schedulerFactoryBean.getScheduler().triggerJob(jobKey,jobDataMap);
+        } catch (SchedulerException e){
+            e.printStackTrace();
+        }
         return false;
     }
 

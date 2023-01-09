@@ -181,10 +181,40 @@ public class TriggersListener implements TriggerListener {
     public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
     @Override
     public void triggerMisfired(Trigger trigger) {}
-    @Override //Trigger 실행 완료 후 수행되는 메소드
-    public void triggerComplete(Trigger trigger, JobExecutionContext context,Trigger.CompletedExecutionInstruction triggerInstructionCode){}
+  /**
+   * Job 수행 완료 후
+   * Job Exception 발생 시 3번의 재시도 / 그래도 실패 시 해당 Trigger 중지
+   * @param context
+   * @param jobException
+   */
+  @Override
+  public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+    JobKey jobKey = context.getJobDetail().getKey();
+    log.info("jobWasExecuted :: jobKey : {}", jobKey);
+    if (!context.getJobDetail().getJobDataMap().containsKey("reTryCnt"))
+    {
+      context.getJobDetail().getJobDataMap().put("reTryCnt", 0);
+    }
+
+    if(jobException != null){
+      log.info("jobWasExecuted :: jobKey : {} :: Exception : {}", jobKey,jobException.getMessage());
+      int reTryCnt = context.getJobDetail().getJobDataMap().getIntValue("reTryCnt");
+      if(3 >= reTryCnt) {
+        context.getJobDetail().getJobDataMap().put("reTryCnt",++reTryCnt);
+        jobException.setRefireImmediately(true);
+      }else{
+        //해당 Trigger 중지
+        jobException.setUnscheduleAllTriggers(true);
+        //실패 관련 로직(알림,Email)
+        log.info("Send Email :: context : {}", context);
+      }
+    }
+
+  }
 }
 ```
+* jobWasExecuted : Job에서 Exception 발생으로 재시도 횟수만큼 진행 후 정상처리가 안될시 해당 Trigger를 중지시킴
+
 
 #### QuartzUtils
 ```java
@@ -273,4 +303,9 @@ public class QuartzUtils {
 ```java
 
 ```
-* 
+
+#### TestCronJob1~4
+* 1 : 단순 Job Test용
+* 2 : @DisallowConcurrentExecution 을 통해 동기화 보장 테스트용
+* 3 : interrupt 구현
+* 4 : Exception 발생 시 Jobslitener jobWasExecuted 메소드에서 재시도를 위한 Test용
