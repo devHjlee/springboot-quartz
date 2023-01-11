@@ -6,6 +6,8 @@ import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Slf4j
 @Component
 public class JobsListener implements JobListener {
@@ -40,30 +42,66 @@ public class JobsListener implements JobListener {
 
 	/**
 	 * Job 수행 완료 후
-	 * Job Exception 발생 시 3번의 재시도 / 그래도 실패 시 해당 Trigger 중지
+	 * retry N : Job Exception 발생 시 해당 Trigger,Job Pause
+	 * retry Y : Job Exception 발생 시 등록된 기존 Cron Expression 시간에 맞춰 재시도 / 총 3번 실패 시 해당 Trigger 중지
 	 * @param context
 	 * @param jobException
 	 */
 	@Override
 	public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+
+		final int maxCnt = 3;
+
+		int failCnt = context.getTrigger().getJobDataMap().getIntValue("failCnt");
+		String stop = (String) context.getTrigger().getJobDataMap().get("stop");
+		String retry = (String) context.getTrigger().getJobDataMap().get("retry");
+
 		JobKey jobKey = context.getJobDetail().getKey();
+		JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
+
 		log.info("jobWasExecuted :: jobKey : {}", jobKey);
-		if (!context.getJobDetail().getJobDataMap().containsKey("reTryCnt"))
-		{
-			context.getJobDetail().getJobDataMap().put("reTryCnt", 0);
-		}
 
 		if(jobException != null){
-			log.info("jobWasExecuted :: jobKey : {} :: Exception : {}", jobKey,jobException.getMessage());
-			int reTryCnt = context.getJobDetail().getJobDataMap().getIntValue("reTryCnt");
-			if(3 >= reTryCnt) {
-				context.getJobDetail().getJobDataMap().put("reTryCnt",++reTryCnt);
-				jobException.setRefireImmediately(true);
-			}else{
-				//해당 Trigger 중지
-				jobException.setUnscheduleAllTriggers(true);
+			log.debug("Exception : {}",jobException.getMessage());
+			try {
+				if("N".equals(retry)){
+					//context.getScheduler().pauseJob(jobKey);
+					jobException.setUnscheduleAllTriggers(true);
+				}else {
+					++failCnt;
+
+					if (maxCnt == failCnt) {
+						jobDataMap.put("stop", "Y");
+					} else {
+						jobDataMap.put("failCnt", String.valueOf(failCnt));
+					}
+					if (("N").equals(stop)) {
+
+						CronTrigger cronTrigger = (CronTrigger) context.getTrigger();
+						Trigger newTrigger = TriggerBuilder
+								.newTrigger()
+								.startAt(new Date(System.currentTimeMillis() + 60000)) //reschedule 진행시 즉시 수행되는것을 방지하기 위해
+								.withIdentity(context.getTrigger().getKey())
+								//.withSchedule(CronScheduleBuilder.cronSchedule("*****"))
+								.withSchedule(cronTrigger.getScheduleBuilder())
+								.usingJobData(jobDataMap) // 실패 횟수,정지여부를 Trigger JobDataMap에 추가
+								.build();
+
+						context.getScheduler().rescheduleJob(context.getTrigger().getKey(), newTrigger);
+						//정해진 시간이 아닌 즉시 실행을 위해서는 RefireImmediately 사용 필요
+						//jobException.setRefireImmediately(true);
+
+					} else {
+						//해당 Trigger 중지
+						jobException.setUnscheduleAllTriggers(true);
+						//context.getScheduler().pauseJob(jobKey);
+					}
+
+				}
 				//실패 관련 로직(알림,Email)
-				log.info("Send Email :: context : {}", context);
+				log.info("notified :: context : {}", context);
+			} catch (SchedulerException e) {
+				e.printStackTrace();
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 public class JobRequest {
     private String jobGroup = "DEV";
+    private String retry = "N";
     @NotBlank(message = "JobName is required.")
     private String jobName;
     @NotBlank(message = "JobClass is required.")

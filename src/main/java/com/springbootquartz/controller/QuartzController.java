@@ -26,7 +26,11 @@ public class QuartzController {
 
     @RequestMapping(value = "/job/add", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> addScheduleJob(@Valid @RequestBody JobRequest jobRequest){
-        quartzService.addScheduleJob(jobRequest);
+        if(!quartzService.isJobExists(jobRequest)){
+            quartzService.addScheduleJob(jobRequest);
+        }else{
+            return new ResponseEntity<>(new ApiResponse(false,"Job is exist."), HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(new ApiResponse(true,"Success"), HttpStatus.CREATED);
     }
 
