@@ -1,5 +1,7 @@
 package com.springbootquartz.quartz;
 
+import com.springbootquartz.domain.QuartBatchLog;
+import com.springbootquartz.service.QuartzBatchLogService;
 import com.springbootquartz.service.QuartzHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -14,6 +16,8 @@ public class JobsListener implements JobListener {
 
 	@Autowired
 	private QuartzHistoryService quartzHistoryService;
+	@Autowired
+	private QuartzBatchLogService quartzBatchLogService;
 
 	@Override
 	public String getName() {
@@ -100,9 +104,13 @@ public class JobsListener implements JobListener {
 				}
 				//실패 관련 로직(알림,Email)
 				log.info("notified :: context : {}", context);
+
 			} catch (SchedulerException e) {
 				e.printStackTrace();
 			}
 		}
+		QuartBatchLog quartBatchLog = new QuartBatchLog();
+		quartBatchLog.setEndTime(new Date());
+		quartzBatchLogService.save(quartBatchLog);
 	}
 }

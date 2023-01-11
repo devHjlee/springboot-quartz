@@ -24,5 +24,6 @@ public class QuartSchedulerHistory {
     private String jobClassName;
     private String cronExpression;
     private String description;
+    private String resaon;
 
 }

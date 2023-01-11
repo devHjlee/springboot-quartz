@@ -161,61 +161,109 @@ spring.quartz.properties.org.quartz.jobStore.misfireThreshold=60000
 @Component
 public class JobsListener implements JobListener {
     //...생략
-    @Override //Job 수행 전 수행되는 메소드
-    public void jobToBeExecuted(JobExecutionContext context) {}
-    @Override // Job 중단된 상태
-    public void jobExecutionVetoed(JobExecutionContext context) {}
+  /**
+   * Job 수행 전
+   * @param context
+   */
+  @Override
+  public void jobToBeExecuted(JobExecutionContext context) {}
+
+  /**
+   * Job 중단된 상태
+   * @param context
+   */
+  @Override
+  public void jobExecutionVetoed(JobExecutionContext context) {}
+
   /**
    * Job 수행 완료 후
-   * Job Exception 발생 시 3번의 재시도 / 그래도 실패 시 해당 Trigger 중지
+   * retry N : Job Exception 발생 시 해당 Trigger,Job Pause
+   * retry Y : Job Exception 발생 시 등록된 기존 Cron Expression 시간에 맞춰 재시도 / 총 3번 실패 시 해당 Trigger 중지
    * @param context
    * @param jobException
    */
   @Override
   public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
+
+    final int maxCnt = 3;
+
+    int failCnt = context.getTrigger().getJobDataMap().getIntValue("failCnt");
+    String stop = (String) context.getTrigger().getJobDataMap().get("stop");
+    String retry = (String) context.getTrigger().getJobDataMap().get("retry");
+
     JobKey jobKey = context.getJobDetail().getKey();
+    JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
+
     log.info("jobWasExecuted :: jobKey : {}", jobKey);
-    if (!context.getJobDetail().getJobDataMap().containsKey("reTryCnt"))
-    {
-      context.getJobDetail().getJobDataMap().put("reTryCnt", 0);
-    }
 
     if(jobException != null){
-      log.info("jobWasExecuted :: jobKey : {} :: Exception : {}", jobKey,jobException.getMessage());
-      int reTryCnt = context.getJobDetail().getJobDataMap().getIntValue("reTryCnt");
-      if(3 >= reTryCnt) {
-        context.getJobDetail().getJobDataMap().put("reTryCnt",++reTryCnt);
-        jobException.setRefireImmediately(true);
-      }else{
-        //해당 Trigger 중지
-        jobException.setUnscheduleAllTriggers(true);
+      log.debug("Exception : {}",jobException.getMessage());
+      try {
+        if("N".equals(retry)){
+          //context.getScheduler().pauseJob(jobKey);
+          jobException.setUnscheduleAllTriggers(true);
+        }else {
+          ++failCnt;
+
+          if (maxCnt == failCnt) {
+            jobDataMap.put("stop", "Y");
+          } else {
+            jobDataMap.put("failCnt", String.valueOf(failCnt));
+          }
+          if (("N").equals(stop)) {
+
+            CronTrigger cronTrigger = (CronTrigger) context.getTrigger();
+            Trigger newTrigger = TriggerBuilder
+                    .newTrigger()
+                    .startAt(new Date(System.currentTimeMillis() + 60000)) //reschedule 진행시 즉시 수행되는것을 방지하기 위해
+                    .withIdentity(context.getTrigger().getKey())
+                    //.withSchedule(CronScheduleBuilder.cronSchedule("*****"))
+                    .withSchedule(cronTrigger.getScheduleBuilder())
+                    .usingJobData(jobDataMap) // 실패 횟수,정지여부를 Trigger JobDataMap에 추가
+                    .build();
+
+            context.getScheduler().rescheduleJob(context.getTrigger().getKey(), newTrigger);
+            //정해진 시간이 아닌 즉시 실행을 위해서는 RefireImmediately 사용 필요
+            //jobException.setRefireImmediately(true);
+
+          } else {
+            //해당 Trigger 중지
+            jobException.setUnscheduleAllTriggers(true);
+            //context.getScheduler().pauseJob(jobKey);
+          }
+
+        }
         //실패 관련 로직(알림,Email)
-        log.info("Send Email :: context : {}", context);
+        log.info("notified :: context : {}", context);
+      } catch (SchedulerException e) {
+        e.printStackTrace();
       }
     }
-
   }
 }
 ```
-* jobWasExecuted : Job에서 Exception 발생으로 재시도 횟수만큼 진행 후 정상처리가 안될시 해당 Trigger를 중지시킴
+* jobWasExecuted : Job Exception 발생 시 Cron에 맞춰 재수행을 위해 기능 추가
+  * Trigger 등록시 JobDataMap 에 재수행(retry),정지(stop),실패횟수(failcnt) 추가
+  * Job에서 Exception 발생시 retry 값의 따라 즉시정지 / 재수행 결정
+  * jobException.setRefireImmediately(true) 로 진행시 Cron에 맞춘 수행이 아닌 즉시수행 
 
 #### TriggerListener
 ```java
 @Component
 public class TriggersListener implements TriggerListener {
-    //...생략
-    @Override //Trigger 실행시, 리스너중 가장 먼저 실행됨
-    public void triggerFired(Trigger trigger, JobExecutionContext context) {}
-    @Override //Trigger 중단 여부를 확인하는 메소드
-    public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
-    @Override
-    public void triggerMisfired(Trigger trigger) {}
-    @Override //Trigger 수행 완료 후 실행
-    public void triggerComplete(Trigger trigger, JobExecutionContext context,
-								Trigger.CompletedExecutionInstruction triggerInstructionCode) {}
+  //...생략
+  @Override //Trigger 실행시, 리스너중 가장 먼저 실행됨
+  public void triggerFired(Trigger trigger, JobExecutionContext context) {}
+  @Override //Trigger 중단 여부를 확인하는 메소드
+  public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {return false;}
+  @Override
+  public void triggerMisfired(Trigger trigger) {}
+  @Override //Trigger 수행 완료 후 실행
+  public void triggerComplete(Trigger trigger, JobExecutionContext context,
+                              Trigger.CompletedExecutionInstruction triggerInstructionCode) {}
 
-  }
 }
+
 ```
 
 
@@ -271,10 +319,15 @@ public class QuartzUtils {
      */
     private static Trigger createCronTrigger(JobRequest jobRequest) {
         CronTriggerFactoryBean factoryBean = new CronTriggerFactoryBean();
+        JobDataMap jobDataMap = new JobDataMap();
+        jobDataMap.put("failCnt","0");
+        jobDataMap.put("stop","N");
+        jobDataMap.put("retry",jobRequest.getRetry());
         factoryBean.setName(jobRequest.getJobName().concat("Trigger"));
         factoryBean.setGroup(jobRequest.getJobGroup());
         factoryBean.setCronExpression(jobRequest.getCronExpression());
         factoryBean.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW);
+        factoryBean.setJobDataMap(jobDataMap);
         try {
             factoryBean.afterPropertiesSet();
         } catch (ParseException e) {
@@ -309,13 +362,14 @@ public class QuartzUtils {
 ```
 
 #### TestCronJob1~4
-* TestCronJob11 : 단순 Job Test용
-* TestCronJob12 : @DisallowConcurrentExecution 을 통해 동기화 보장 테스트용 스케줄은 10초단위로 돌면서 쓰레드슬립을 15초로 설정
+* TestCronJob1 : 단순 Job Test용
+* TestCronJob2 : @DisallowConcurrentExecution 을 통해 동기화 보장 테스트용 스케줄은 10초단위로 돌면서 쓰레드슬립을 15초로 설정
   * @DisallowConcurrentExecution 옵션 사용
     ![img_4.png](img_4.png)
     ![img_5.png](img_5.png)
   * @DisallowConcurrentExecution 옵션 주석처리
     ![img_6.png](img_6.png)
     ![img_7.png](img_7.png)
-* TestCronJob13 : interrupt 구현
-* TestCronJob14 : Exception 발생 시 Jobslitener jobWasExecuted 메소드에서 재시도를 위한 Test용
+* TestCronJob3 : interrupt 구현
+* TestCronJob4 : Exception 발생 시 Jobslitener jobWasExecuted 메소드에서 재시도를 위한 Test용
+
