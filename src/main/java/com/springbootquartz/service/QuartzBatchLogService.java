@@ -1,31 +1,23 @@
 package com.springbootquartz.service;
 
-
-import com.springbootquartz.domain.QuartBatchLog;
-import com.springbootquartz.domain.QuartSchedulerHistory;
+import com.springbootquartz.dto.QuartzBatchLogDto;
 import com.springbootquartz.repository.QuartzBatchLogRepository;
-import com.springbootquartz.repository.QuartzHistoryRepository;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.sql.SQLException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service("quartzBatchLogService")
+@Transactional
+@RequiredArgsConstructor
 public class QuartzBatchLogService {
-    @Resource
-    QuartzBatchLogRepository quartzBatchLogRepository;
+    private final QuartzBatchLogRepository quartzBatchLogRepository;
 
-    public void save(QuartBatchLog qt) {
-        qt.setJobName("BBB");
-        qt.setJobGroup("BBB");
-        quartzBatchLogRepository.save(qt);
-        try {
-            throw new SQLException();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void save(QuartzBatchLogDto qt) {
+        log.debug(qt.toString());
+        quartzBatchLogRepository.save(qt.toEntity());
     }
 }
