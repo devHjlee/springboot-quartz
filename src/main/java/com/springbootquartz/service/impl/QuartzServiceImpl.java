@@ -39,6 +39,9 @@ public class QuartzServiceImpl implements QuartzService {
             trigger = QuartzUtils.createTrigger(jobRequest);
 
             schedulerFactoryBean.getScheduler().scheduleJob(jobDetail,trigger);
+
+            jobRequest.setSchedName(schedulerFactoryBean.getScheduler().getSchedulerName());
+            quartzHistoryService.save(jobRequest);
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
         } catch (ClassNotFoundException e){

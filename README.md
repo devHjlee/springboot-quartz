@@ -1,12 +1,10 @@
 # 개요
-* 스프링스케줄러+shedLock 을 사용하여 스케줄링 이중화를 구현하였으나 
-스케줄에 대한 컨트롤이 불가능하였고 어드민 UI 에서 스케줄에 대한 기능추가를 위해 Quartz로 변경
+* 스프링스케줄러+shedLock 로 이중화 기능 구현하였으나 스케줄에 대한 설정을 위해 Quartz 로 변경
 * 구현 목록
-  * 이중화 : Cluster 기능은 DB Cluster 사용
-  * Job : 생성,즉시수행
-  * CronTrigger : 생성,수정,일시정지,재기동
-  * 스케줄 등록 수정 이력
-  * 스케줄 성공 여부 이력
+  * DB Cluster 를 통한 이중화
+  * CronTrigger 생성,수정,일시정지,재기동
+  * 스케줄 변경 정보, 스케줄 수행 이력
+  * Job 실패시 기존 등록된 수행시간에 맞춰 지정된 횟수만큼 수행 (횟수 초과시 중지)  
 
 ## 목차
   공식 홈페이지 : http://www.quartz-scheduler.org/
@@ -159,21 +157,35 @@ spring.quartz.properties.org.quartz.jobStore.misfireThreshold=60000
 #### JobListener
 ```java
 @Component
+@RequiredArgsConstructor
 public class JobsListener implements JobListener {
-    //...생략
+
+  private final QuartzBatchLogService quartzBatchLogService;
+
+  @Override
+  public String getName() {
+    return "globalJob";
+  }
+
   /**
    * Job 수행 전
    * @param context
    */
   @Override
-  public void jobToBeExecuted(JobExecutionContext context) {}
+  public void jobToBeExecuted(JobExecutionContext context) {
+    JobKey jobKey = context.getJobDetail().getKey();
+    log.info("jobToBeExecuted :: jobKey : {}", jobKey);
+  }
 
   /**
    * Job 중단된 상태
    * @param context
    */
   @Override
-  public void jobExecutionVetoed(JobExecutionContext context) {}
+  public void jobExecutionVetoed(JobExecutionContext context) {
+    JobKey jobKey = context.getJobDetail().getKey();
+    log.info("jobExecutionVetoed :: jobKey : {}", jobKey);
+  }
 
   /**
    * Job 수행 완료 후
@@ -190,15 +202,16 @@ public class JobsListener implements JobListener {
     int failCnt = context.getTrigger().getJobDataMap().getIntValue("failCnt");
     String stop = (String) context.getTrigger().getJobDataMap().get("stop");
     String retry = (String) context.getTrigger().getJobDataMap().get("retry");
-
+    String schedName = "";
     JobKey jobKey = context.getJobDetail().getKey();
     JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
 
     log.info("jobWasExecuted :: jobKey : {}", jobKey);
+    try {
+      schedName = context.getScheduler().getSchedulerName();
+      if(jobException != null){
+        log.debug("Exception : {}",jobException.getMessage());
 
-    if(jobException != null){
-      log.debug("Exception : {}",jobException.getMessage());
-      try {
         if("N".equals(retry)){
           //context.getScheduler().pauseJob(jobKey);
           jobException.setUnscheduleAllTriggers(true);
@@ -235,10 +248,26 @@ public class JobsListener implements JobListener {
         }
         //실패 관련 로직(알림,Email)
         log.info("notified :: context : {}", context);
-      } catch (SchedulerException e) {
-        e.printStackTrace();
+
+
       }
+    } catch (SchedulerException e) {
+      e.printStackTrace();
     }
+    QuartzBatchLogDto quartzBatchLogDto = QuartzBatchLogDto
+            .builder()
+            .schedName(schedName)
+            .jobName(jobKey.getName())
+            .jobGroup(jobKey.getGroup())
+            .triggerName(context.getTrigger().getKey().getName())
+            .triggerGroup(context.getTrigger().getKey().getGroup())
+            .startTime(context.getFireTime())
+            .endTime(new Date(context.getFireTime().getTime() + context.getJobRunTime()))
+            .result(jobException != null ?"N":"Y")
+            .exceptionMessage(jobException != null ? jobException.getMessage():"")
+            .build();
+
+    quartzBatchLogService.save(quartzBatchLogDto);
   }
 }
 ```
@@ -357,9 +386,7 @@ public class QuartzUtils {
 ```
 
 #### QuartzService
-```java
-
-```
+* 등록,수정,삭제,일시정지,재시작
 
 #### TestCronJob1~4
 * TestCronJob1 : 단순 Job Test용

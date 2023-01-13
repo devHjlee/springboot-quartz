@@ -1,16 +1,13 @@
 package com.springbootquartz.quartz;
 
-import com.springbootquartz.domain.QuartzBatchLog;
 import com.springbootquartz.dto.QuartzBatchLogDto;
 import com.springbootquartz.service.QuartzBatchLogService;
-import com.springbootquartz.service.QuartzHistoryService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Slf4j
