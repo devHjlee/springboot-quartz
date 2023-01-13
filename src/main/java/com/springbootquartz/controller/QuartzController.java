@@ -27,6 +27,7 @@ public class QuartzController {
     @RequestMapping(value = "/job/add", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> addScheduleJob(@Valid @RequestBody JobRequest jobRequest){
         if(!quartzService.isJobExists(jobRequest)){
+            jobRequest.setScheduleStat("ADD");
             quartzService.addScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job is exist."), HttpStatus.BAD_REQUEST);
@@ -38,6 +39,7 @@ public class QuartzController {
     public ResponseEntity<ApiResponse> updateScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
         //quartzService.updateScheduleJob(jobRequest);
         if(quartzService.isJobExists(jobRequest)){
+            jobRequest.setScheduleStat("UPDATE");
             quartzService.updateScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
@@ -48,6 +50,7 @@ public class QuartzController {
     @RequestMapping(value = "/job/delete", method = RequestMethod.DELETE)
     public ResponseEntity<ApiResponse> deleteScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
         if(quartzService.isJobExists(jobRequest)) {
+            jobRequest.setScheduleStat("DELETE");
             quartzService.deleteScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
@@ -58,6 +61,7 @@ public class QuartzController {
     @RequestMapping(value = "/job/pause", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> pauseScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
         if(quartzService.isJobExists(jobRequest)) {
+            jobRequest.setScheduleStat("PAUSE");
             quartzService.pauseScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
@@ -68,6 +72,7 @@ public class QuartzController {
     @RequestMapping(value = "/job/resume", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse> resumeScheduleJob(@Valid @RequestBody JobRequest jobRequest) {
         if(quartzService.isJobExists(jobRequest)) {
+            jobRequest.setScheduleStat("RESUME");
             quartzService.resumeScheduleJob(jobRequest);
         }else{
             return new ResponseEntity<>(new ApiResponse(false,"Job dose not exist."), HttpStatus.BAD_REQUEST);
