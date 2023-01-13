@@ -6,11 +6,11 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ApiResponse {
-    private Boolean success;
+    private String status;
     private String message;
 
-    public ApiResponse(Boolean success, String message) {
-        this.success = success;
+    public ApiResponse(String status, String message) {
+        this.status = status;
         this.message = message;
     }
 }

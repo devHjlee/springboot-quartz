@@ -2,6 +2,7 @@ package com.springbootquartz.service.impl;
 
 
 import com.springbootquartz.dto.JobRequest;
+import com.springbootquartz.exception.ApiException;
 import com.springbootquartz.quartz.QuartzUtils;
 import com.springbootquartz.service.QuartzHistoryService;
 import com.springbootquartz.service.QuartzService;
@@ -10,17 +11,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.context.ApplicationContext;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
 
+import static com.springbootquartz.exception.ErrorCode.INVALID_PARAMETER;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class QuartzServiceImpl implements QuartzService {
-    // TODO: 2023-01-04 Business Exception 추가해서 처리 필요
+
     private final SchedulerFactoryBean schedulerFactoryBean;
 
     private final QuartzHistoryService quartzHistoryService;
@@ -46,7 +50,7 @@ public class QuartzServiceImpl implements QuartzService {
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
         } catch (ClassNotFoundException e){
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
-            throw new RuntimeException(e.getMessage());
+            throw new ApiException(INVALID_PARAMETER);
         } catch (IllegalArgumentException e){
             log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
             throw new IllegalArgumentException(e.getMessage());
