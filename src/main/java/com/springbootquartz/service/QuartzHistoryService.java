@@ -26,6 +26,7 @@ public class QuartzHistoryService {
                 .jobClass(jobRequest.getJobClass())
                 .triggerName(jobRequest.getJobName().concat("Trigger"))
                 .triggerGroup(jobRequest.getJobGroup())
+                .scheduleState(jobRequest.getScheduleStat())
                 .cronExpression(jobRequest.getCronExpression())
                 .reason(jobRequest.getReason())
                 .build();

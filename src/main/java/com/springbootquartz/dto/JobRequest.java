@@ -26,6 +26,8 @@ public class JobRequest {
     //@NotBlank(message = "cronExpression is required.")
     private String cronExpression;
 
+    private String scheduleStat;
+
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startDateAt;
 
