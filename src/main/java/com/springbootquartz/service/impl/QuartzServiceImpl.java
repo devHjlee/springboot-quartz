@@ -3,6 +3,7 @@ package com.springbootquartz.service.impl;
 
 import com.springbootquartz.dto.JobRequest;
 import com.springbootquartz.exception.ApiException;
+import com.springbootquartz.exception.ErrorCode;
 import com.springbootquartz.quartz.QuartzUtils;
 import com.springbootquartz.service.QuartzHistoryService;
 import com.springbootquartz.service.QuartzService;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.context.ApplicationContext;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 
@@ -47,12 +47,10 @@ public class QuartzServiceImpl implements QuartzService {
             jobRequest.setSchedName(schedulerFactoryBean.getScheduler().getSchedulerName());
             quartzHistoryService.save(jobRequest);
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         } catch (ClassNotFoundException e){
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
-            throw new ApiException(INVALID_PARAMETER);
+            throw new ApiException(ErrorCode.INVALID_CLASS);
         } catch (IllegalArgumentException e){
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
             throw new IllegalArgumentException(e.getMessage());
         }
     }
@@ -84,7 +82,7 @@ public class QuartzServiceImpl implements QuartzService {
         try {
             schedulerFactoryBean.getScheduler().deleteJob(jobKey);
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobRequest.getJobName(), e);
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -95,7 +93,7 @@ public class QuartzServiceImpl implements QuartzService {
         try {
             schedulerFactoryBean.getScheduler().pauseJob(jobKey);
         } catch (SchedulerException e) {
-            e.printStackTrace();
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -106,7 +104,7 @@ public class QuartzServiceImpl implements QuartzService {
         try {
             schedulerFactoryBean.getScheduler().resumeJob(jobKey);
         } catch (SchedulerException e) {
-            e.printStackTrace();
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -118,8 +116,8 @@ public class QuartzServiceImpl implements QuartzService {
 
         try {
             schedulerFactoryBean.getScheduler().triggerJob(jobKey,jobDataMap);
-        } catch (SchedulerException e){
-            e.printStackTrace();
+        } catch (SchedulerException e) {
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -136,8 +134,7 @@ public class QuartzServiceImpl implements QuartzService {
                 }
             }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobRequest.getJobName(), e);
-
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -152,7 +149,7 @@ public class QuartzServiceImpl implements QuartzService {
             }
 
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while checking job exists :: jobKey : {}", jobKey, e);
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return false;
     }
@@ -176,7 +173,7 @@ public class QuartzServiceImpl implements QuartzService {
                 }
             }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] Error occurred while getting job state with jobKey : {}", jobKey, e);
+            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
         return null;
     }
