@@ -2,6 +2,7 @@ package com.springbootquartz.config;
 
 import com.springbootquartz.quartz.JobsListener;
 import com.springbootquartz.quartz.TriggersListener;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties;
@@ -15,16 +16,13 @@ import java.util.Properties;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class QuartzConfig {
 
-    @Autowired
-    private QuartzProperties quartzProperties;
-    @Autowired
-    private DataSource dataSource;
-    @Autowired
-    private JobsListener jobsListener;
-    @Autowired
-    private TriggersListener triggersListener;
+    private final QuartzProperties quartzProperties;
+    private final DataSource dataSource;
+    private final JobsListener jobsListener;
+    private final TriggersListener triggersListener;
     /**
      * Quartz 관련 설정
      *
@@ -34,7 +32,7 @@ public class QuartzConfig {
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean(ApplicationContext applicationContext) {
         SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-
+        schedulerFactoryBean.setAutoStartup(quartzProperties.isAutoStartup());
         AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
         jobFactory.setApplicationContext(applicationContext);
         schedulerFactoryBean.setJobFactory(jobFactory);
